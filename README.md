@@ -1,8 +1,9 @@
 #  Expense Tracker Microservices
 
-# Overview
-This project is a microservices-based Expense Tracker application built with Spring Boot.
-It allows users to manage expenses, categories, finances, and sends notifications, with authentication & service discovery.
+## Overview
+This project is a **microservices-based Expense Tracker application** built using **Spring Boot**.  
+It allows users to manage their expenses, categories, and financial summaries, while also providing authentication, API gateway routing, and asynchronous notifications via Kafka.
+
 
 # Microservices Architecture
 The system is divided into 6 main services:
@@ -58,7 +59,16 @@ Database: SQL Server
 Security: Spring Security, JWT
 Messaging: Apache Kafka
 
-Build Tool: Maven
+##  Technologies Used
+- **Spring Boot 3+**
+- **Spring Cloud (Eureka, API Gateway, OpenFeign)**
+- **Spring Security + JWT**
+- **Apache Kafka** (for event-driven notifications)
+- **MS SQL** (for persistent storage)
+- **Maven** (project management)
+- **Lombok** (reduce boilerplate code)
+- **Postman** (API testing)
+- **GitHub** (version control)
 API Testing: Postman
 
 #Workflow
