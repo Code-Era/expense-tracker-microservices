@@ -1,0 +1,14 @@
+package com.authuserservice;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+@EnableEurekaClient
+public class AuthuserserviceApplication {
+
+	public static void main(String[] args) {
+		SpringApplication.run(AuthuserserviceApplication.class, args);
+	}
+
+}

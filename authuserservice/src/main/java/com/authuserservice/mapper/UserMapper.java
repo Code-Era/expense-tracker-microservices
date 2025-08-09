@@ -1,0 +1,28 @@
+package com.authuserservice.mapper;
+
+
+import com.authuserservice.dto.Registration.UserRegisterRequestDto;
+import com.authuserservice.dto.Registration.UserResponseDto;
+import com.authuserservice.entity.User;
+
+public class UserMapper {
+
+    public static User mapToUserEntity(UserRegisterRequestDto userRegisterRequestDto) {
+        User user = new User();
+        user.setName(userRegisterRequestDto.getName());
+        user.setEmail(userRegisterRequestDto.getEmail());
+        user.setPassword(userRegisterRequestDto.getPassword());
+        return user;
+    }
+
+    public static UserResponseDto mapToUserResponseDto(User user) {
+        UserResponseDto userResponseDto = new UserResponseDto();
+        userResponseDto.setId(user.getId());
+        userResponseDto.setUsername(user.getName());
+        userResponseDto.setEmail(user.getEmail());
+        userResponseDto.setRole(user.getRoles().iterator().next().getName());
+        return userResponseDto;
+    }
+
+
+}
