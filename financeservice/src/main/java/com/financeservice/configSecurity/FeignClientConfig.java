@@ -1,0 +1,41 @@
+package com.financeservice.configSecurity;
+
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import feign.RequestInterceptor;
+import feign.RequestTemplate;
+import feign.codec.Decoder;
+import org.springframework.boot.autoconfigure.http.HttpMessageConverters;
+import org.springframework.cloud.openfeign.support.ResponseEntityDecoder;
+import org.springframework.cloud.openfeign.support.SpringDecoder;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+
+@Configuration
+public class FeignClientConfig implements RequestInterceptor {
+    @Override
+    public void apply(RequestTemplate requestTemplate) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+
+        if (authentication != null && authentication.getCredentials() != null) {
+            String token = authentication.getCredentials().toString();
+            System.out.println("Finance Service FeignClientConfig- "+token);
+            requestTemplate.header("Authorization",  token);
+        }
+        requestTemplate.header("X-GATEWAY-ACCESS", "true");
+
+    }
+
+   /* @Bean
+    public Decoder feignDecoder() {
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        return new ResponseEntityDecoder(
+                new SpringDecoder(() -> new HttpMessageConverters(new MappingJackson2HttpMessageConverter(mapper)))
+        );
+    }*/
+}

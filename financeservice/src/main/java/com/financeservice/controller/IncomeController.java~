@@ -1,0 +1,165 @@
+package com.financeservice.controller;
+
+
+import com.financeservice.dto.Income.IncomeRequestDto;
+import com.financeservice.dto.Income.IncomeResponseDto;
+import com.financeservice.payload.ApiResponse;
+import com.financeservice.payload.ResponseService;
+import com.financeservice.service.Income.IncomeService;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+/*@Tag(
+        name = "CRUD REST APIs for InCome Details in Expense Tracker App",
+        description = "CRUD REST APIs in Expense Tracker to CREATE, UPDATE, FETCH AND DELETE income details"
+)*/
+@RestController
+@RequestMapping("/v1/income")
+@RequiredArgsConstructor
+public class IncomeController {
+
+    private final IncomeService incomeService;
+
+
+
+   /* @Operation(
+            summary = "Create Income REST API",
+            description = "REST API to create new Income in Expense Tracker App"
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "201",
+                    description = "HTTP Status CREATED"
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "500",
+                    description = "HTTP Status Internal Server Error",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorModel.class)
+                    )
+            )
+    }
+    )*/
+    @PostMapping
+    public ResponseEntity<ApiResponse<IncomeResponseDto>> addIncome(
+            @Valid @RequestBody IncomeRequestDto incomeRequestDto
+            ) {
+        return ResponseService.buildSuccessResponse(incomeService.addIncome(incomeRequestDto),
+                HttpStatus.CREATED.value(),
+                "Income Created Successfully");
+
+    }
+
+    /*@Operation(
+            summary = "Get All Incomes REST API",
+            description = "REST API to fetch all Incomes in Expense Tracker App"
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "HTTP Status OK"
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "500",
+                    description = "HTTP Status Internal Server Error",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorModel.class)
+                    )
+            )
+    })*/
+    @GetMapping
+    public ResponseEntity<ApiResponse<List<IncomeResponseDto>>> getIncomeAllList() {
+        return ResponseService.buildSuccessResponse(incomeService.getAllIncomesList(),
+                HttpStatus.OK.value(),
+                "Incomes Fetched Successfully");
+    }
+
+    /*@Operation(
+            summary = "Get Income By Id REST API",
+            description = "REST API to fetch Income by Id in Expense Tracker App"
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "HTTP Status OK"
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "404",
+                    description = "Resource not found",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorModel.class)
+                    )
+            )
+    })*/
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiResponse<IncomeResponseDto>> getIncomeListByd(@Valid @PathVariable Long id) {
+        return ResponseService.buildSuccessResponse(incomeService.getIncomeById(id),
+                HttpStatus.OK.value(),
+                "Income Fetched Successfully");
+    }
+
+
+  /*  @Operation(
+            summary = "Update Income REST API",
+            description = "REST API to update Income in Expense Tracker App"
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "HTTP Status OK"
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "409",
+                    description = "HTTP Status CONFLICT",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorModel.class)
+                    )
+            )
+    })*/
+    @PutMapping("/{id}")
+    public ResponseEntity<ApiResponse<IncomeResponseDto>> updateIncome(@Valid @PathVariable Long id,
+                                                                       @Valid @RequestBody IncomeRequestDto incomeRequestDto) {
+        return ResponseService.buildSuccessResponse(incomeService.updateIncome(id, incomeRequestDto),
+                HttpStatus.OK.value(),
+                "Income updated Successfully");
+    }
+
+
+   /* @Operation(
+            summary = "Delete Income REST API",
+            description = "REST API to delete Income in Expense Tracker App"
+
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "HTTP Status OK"
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "404",
+                    description = "Resource not found",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorModel.class)
+                    )
+            )
+    })*/
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ApiResponse<String>> deleteIncome(@Valid @PathVariable Long id) {
+        long mDeleted = incomeService.deleteIncome(id);
+        return ResponseService.buildSuccessResponse(String .valueOf(mDeleted),
+                HttpStatus.OK.value(),
+                "Income deleted Successfully");
+    }
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/admin/incomes")
+    public List<IncomeResponseDto> getAllIncomes() {
+        return null;
+    }
+
+}

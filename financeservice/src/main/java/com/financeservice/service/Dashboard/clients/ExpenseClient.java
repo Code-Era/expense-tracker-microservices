@@ -1,0 +1,28 @@
+package com.financeservice.service.Dashboard.clients;
+
+import com.financeservice.dto.ExpenseAmount;
+import com.financeservice.dto.ExpenseResponseDto;
+import com.financeservice.payload.ApiResponse;
+import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
+import java.util.List;
+
+@FeignClient(name = "expense-category-service", fallback = ExpenseClientFallback.class)
+public interface ExpenseClient {
+
+    @GetMapping(value = "/v1/expense/expenses/total/all", consumes = "application/json")
+     ResponseEntity<ApiResponse<ExpenseAmount>> getTotalExpense() ;
+
+    @GetMapping(value = "/v1/expense/expenses/total", consumes = "application/json")
+    ResponseEntity<ApiResponse<ExpenseAmount>> getTotalExpenseForUser(@RequestParam String userEmail) ;
+
+
+    @GetMapping("/v1/expense/expenses/java-version")
+     ResponseEntity<ApiResponse<String>> getJavaInfo() ;
+
+    @GetMapping(value = "/v1/expense/expenses/top-expense", consumes = "application/json")
+    List<ExpenseResponseDto> getTop3Expense(@RequestParam String userEmail) ;
+}

@@ -1,0 +1,20 @@
+package com.financeservice.service;
+
+import com.financeservice.dto.ExpenseAmount;
+import com.financeservice.payload.ApiResponse;
+import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+
+@FeignClient(name = "expense-service", fallback = ExpenseClientFallback.class)
+public interface ExpenseClient {
+
+    @GetMapping(value = "/v1/expense/expenses/total/all", consumes = "application/json")
+     ResponseEntity<ApiResponse<ExpenseAmount>> getTotalExpense() ;
+
+
+    @GetMapping("/v1/expense/expenses/java-version")
+     ResponseEntity<ApiResponse<String>> getJavaInfo() ;
+
+}

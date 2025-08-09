@@ -1,0 +1,34 @@
+package com.financeservice.mapper;
+
+
+
+import com.financeservice.dto.Income.IncomeRequestDto;
+import com.financeservice.dto.Income.IncomeResponseDto;
+import com.financeservice.entity.Income;
+
+import java.time.LocalDate;
+
+
+public class IncomeMapper {
+
+    public static Income mapToIncomeEntity(IncomeRequestDto incomeRequestDto) {
+        Income income = new Income();
+        income.setTitle(incomeRequestDto.getTitle());
+        income.setAmount(incomeRequestDto.getAmount());
+        income.setDate(LocalDate.now());
+        income.setDescription(incomeRequestDto.getDescription());
+        income.setCategory(incomeRequestDto.getCategory());
+        return income;
+    }
+
+    public static IncomeResponseDto mapToIncomeResponseDto(Income income) {
+        IncomeResponseDto incomeResponseDto = new IncomeResponseDto();
+        incomeResponseDto.setTitle(income.getTitle());
+        incomeResponseDto.setAmount(income.getAmount());
+        incomeResponseDto.setCategory(income.getCategory());
+        incomeResponseDto.setDescription(income.getDescription());
+        incomeResponseDto.setDate(String.valueOf(income.getDate())); //income.getDate());
+        incomeResponseDto.setCreatedByEmail(income.getUserEmail());
+        return incomeResponseDto;
+    }
+}

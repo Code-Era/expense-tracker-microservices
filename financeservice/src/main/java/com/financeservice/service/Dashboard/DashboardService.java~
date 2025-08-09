@@ -1,0 +1,22 @@
+package com.financeservice.service.Dashboard;
+
+
+
+
+
+import com.financeservice.dto.Summary.AdminDashboardDto;
+import com.financeservice.dto.Summary.DashboardSummaryDto;
+import com.financeservice.dto.Summary.MonthlyStatDto;
+
+import java.util.List;
+
+public interface DashboardService {
+
+    DashboardSummaryDto getDashboardSummary();
+
+    List<MonthlyStatDto> getMonthlySummary();
+
+    List<ExpenseResponseDto> getTopThreeExpense();
+
+    AdminDashboardDto getAdminDashboard();
+}
