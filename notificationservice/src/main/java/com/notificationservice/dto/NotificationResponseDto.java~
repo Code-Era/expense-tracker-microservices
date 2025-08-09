@@ -1,0 +1,21 @@
+package com.notificationservice.dto;
+
+import jakarta.validation.constraints.NotBlank;
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
+public class NotificationResponseDto {
+
+    @NotBlank(message = "Message is required")
+    private String message;
+
+    @NotBlank (message = "userEmail is required")
+    private String userEmail;
+
+    @NotBlank (message = "type is required")
+    private String type;
+
+    private boolean readStatus;
+}

@@ -1,0 +1,40 @@
+package com.notificationservice.entity;
+
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import lombok.Getter;
+import lombok.Setter;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
+@Entity
+@Table(name = "notifications")
+@Getter
+@Setter
+public class NotificationEntity {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @NotBlank (message = "userEmail  is required")
+    private String userEmail ;
+
+    @NotBlank(message = "message is required")
+    private String message;
+
+    @NotBlank(message = "type is required")
+    private String type;
+
+    @NotBlank(message = "status is required")
+    private String status;
+
+    @Column(name = "date")
+    private LocalDate date ;
+
+    @Column(name = "createdAt")
+    private String createdAt ;
+
+}
