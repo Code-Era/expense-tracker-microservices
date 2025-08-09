@@ -1,0 +1,123 @@
+package com.expense_category_service.service.Category;
+
+
+import com.expense_category_service.dto.Category.CategoryRequestDto;
+import com.expense_category_service.dto.Category.CategoryResponseDto;
+import com.expense_category_service.entity.Category;
+import com.expense_category_service.exception.ExceptionUtil;
+import com.expense_category_service.mapper.CategoryMapper;
+import com.expense_category_service.repository.CategoryRepository;
+import com.expense_category_service.repository.ExpenseRepository;
+import com.expense_category_service.util.SessionUtil;
+import lombok.AllArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.stereotype.Service;
+
+import java.time.LocalDate;
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+@AllArgsConstructor
+public class CategoryServiceImpl implements CategoryService {
+
+
+    @Autowired
+    private final SessionUtil sessionUtil;
+
+    private final CategoryRepository categoryRepository;
+
+  private final ExpenseRepository expenseRepository;
+
+    //@CacheEvict(value = "categories", allEntries = true)
+    @Override
+    public CategoryResponseDto createCategory(CategoryRequestDto categoryRequestDto) {
+
+      boolean ifFound = categoryRepository.existsByTitleAndCreatedBy(categoryRequestDto.getTitle(),
+              sessionUtil.getCurrentUserEmail());
+      if(ifFound) {
+         throw  ExceptionUtil.duplicate("Category", categoryRequestDto.getTitle());
+      }
+
+         Category category = CategoryMapper.mapToCategoryEntity(categoryRequestDto);
+
+         category.setCreatedBy(sessionUtil.getCurrentUserEmail());
+
+
+        Category categorySaved = categoryRepository.save(category);
+         if(categorySaved.getId() <= 0) {
+             ExceptionUtil.throwSaveFailed("category");
+         }
+
+        return CategoryMapper.mapToCategoryResponseDto(categorySaved);
+    }
+
+   // @Cacheable
+    @Override
+    public List<CategoryResponseDto> getAllCategory() {
+       // String email = sessionUtil.getCurrentUserEmail();
+
+       List<Category> categories = categoryRepository.findAll();
+
+        return categories.stream()
+                .map(CategoryMapper :: mapToCategoryResponseDto)
+                .collect(Collectors.toList());
+
+    }
+
+  //  @Cacheable(value = "categories")
+    @Override
+    public CategoryResponseDto getCategoryByID(Long id) {
+
+      Category category =  categoryRepository.findById(id)
+                .orElseThrow(
+                        () ->  ExceptionUtil.throwResourceNotFound("Category", String.valueOf(id))
+                );
+
+        return CategoryMapper.mapToCategoryResponseDto(category);
+    }
+
+    @CacheEvict(value = "categories", allEntries = true)
+    @Override
+    public CategoryResponseDto updateCategory(long id, CategoryRequestDto categoryRequestDto) {
+        Category category = categoryRepository.findById(id)
+                .orElseThrow(
+                        () -> ExceptionUtil.throwResourceNotFound("Category", String.valueOf(id))
+                );
+
+        category.setTitle(categoryRequestDto.getTitle());
+        category.setDescription(categoryRequestDto.getDescription());
+        category.setCreatedBy(sessionUtil.getCurrentUserEmail());
+        category.setCreatedAt(LocalDate.now());
+
+        Category categorySaved = categoryRepository.save(category);
+
+        return CategoryMapper.mapToCategoryResponseDto(category);
+
+
+    }
+
+   // @CacheEvict(value = "categories", allEntries = true)
+    @Override
+    public long deleteCategory(long id) {
+
+
+        if (expenseRepository.existsByCategoryId(id))
+            throw  ExceptionUtil.throwBadRequest("Category is in use and cannot be deleted");
+
+        Category category = categoryRepository.findById(id)
+                .orElseThrow(
+                        () -> ExceptionUtil.throwResourceNotFound("Category", String.valueOf(id))
+                );
+        categoryRepository.deleteById(id);
+        return id;
+    }
+
+
+    @Override
+    public List<CategoryResponseDto> getAllCategory(int page, int size, String sortBy, String direction) {
+        return List.of();
+    }
+}

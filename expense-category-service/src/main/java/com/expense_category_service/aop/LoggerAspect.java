@@ -1,0 +1,35 @@
+package com.expense_category_service.aop;
+
+import org.aspectj.lang.ProceedingJoinPoint;
+import org.aspectj.lang.annotation.Around;
+import org.aspectj.lang.annotation.Aspect;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Component;
+
+import java.util.Arrays;
+
+@Aspect
+@Component
+public class LoggerAspect {
+
+    public LoggerAspect() {
+        System.out.println("LoggerAspect initialized ✅");
+    }
+
+
+
+    //@Around("execution(* com.codeera.expensetracker.service..*(..))")
+
+    @Around("@annotation(com.codeera.expensetracker.aop.LogAspect)")
+    public Object logger(ProceedingJoinPoint joinPoint) throws Throwable {
+        long start = System.currentTimeMillis();
+        System.out.println("name : " + SecurityContextHolder.getContext().getAuthentication().getName());
+
+        Object result = joinPoint.proceed();
+        System.out.println("Execution time: " + (System.currentTimeMillis() - start) + " ms");
+        return result;
+    }
+
+
+}

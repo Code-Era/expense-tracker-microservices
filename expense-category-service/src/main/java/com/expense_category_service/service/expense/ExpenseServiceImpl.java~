@@ -1,0 +1,189 @@
+package com.expense_category_service.service.expense;
+
+
+import com.expense_category_service.dto.Expense.ExpenseRequestDto;
+import com.expense_category_service.dto.Expense.ExpenseResponseDto;
+import com.expense_category_service.dto.NotificationRequestDto;
+import com.expense_category_service.entity.Category;
+import com.expense_category_service.entity.Expense;
+import com.expense_category_service.exception.ExceptionUtil;
+import com.expense_category_service.mapper.ExpenseMapper;
+import com.expense_category_service.repository.CategoryRepository;
+import com.expense_category_service.repository.ExpenseRepository;
+import com.expense_category_service.util.SessionUtil;
+import lombok.AllArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.stereotype.Service;
+
+import java.util.Comparator;
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+@AllArgsConstructor
+public class ExpenseServiceImpl implements ExpenseService {
+
+
+
+    @Autowired
+    private ExpenseRepository expenseRepository;
+
+
+    @Autowired
+    private SessionUtil sessionUtil;
+
+    @Autowired
+    private CategoryRepository categoryRepository;
+
+    @Autowired
+    private KafkaTemplate<String, NotificationRequestDto> kafkaTemplate;
+
+    @Override
+    public ExpenseResponseDto createExpense(ExpenseRequestDto expenseRequestDto) {
+
+        Category category = categoryRepository.findById(expenseRequestDto.getCategoryId())
+                .orElseThrow(
+                        () -> ExceptionUtil.throwResourceNotFound("Category",
+                                String.valueOf(expenseRequestDto.getCategoryId()))
+                );
+
+        Expense expenseEntity = ExpenseMapper.mapToExpenseEntity(expenseRequestDto);
+        expenseEntity.setUserEmail(sessionUtil.getCurrentUserEmail());
+        expenseEntity.setCategory(category);
+
+            Expense savedExpense = expenseRepository.save(expenseEntity);
+
+            if(savedExpense.getId() <= 0) {
+                ExceptionUtil.throwSaveFailed("expense");
+            }
+            return ExpenseMapper.mapToExpenseResponseDto(savedExpense);
+
+    }
+
+
+    @Override
+    public List<ExpenseResponseDto> getAllExpenses() {
+        String userEmail = sessionUtil.getCurrentUserEmail();
+
+       return  expenseRepository.findAllByUserEmail(userEmail)
+                    .stream()
+                    .map(ExpenseMapper::mapToExpenseResponseDto)
+                    .sorted(Comparator.comparing(ExpenseResponseDto::getTitle))
+                    .toList();
+    }
+
+    @Override
+    public ExpenseResponseDto getExpenseByID(Long id) {
+
+      Expense expense =  expenseRepository.findById(id).orElseThrow(
+              () -> ExceptionUtil.throwResourceNotFound("Expenses",String.valueOf(id)
+      ));
+      String email = sessionUtil.getCurrentUserEmail();
+
+      if (!expense.getUserEmail().equals(email)) {
+            throw ExceptionUtil.throwAccessDenied("You are not authorized to view this expense");
+        }
+
+      return ExpenseMapper.mapToExpenseResponseDto(expense);
+    }
+
+    @Override
+    public ExpenseResponseDto updateExpense(long id, ExpenseRequestDto expenseRequestDto) {
+
+        Expense existingExpense =  expenseRepository.findById(id).orElseThrow(
+                () -> ExceptionUtil.throwResourceNotFound("Expenses",String.valueOf(id))
+        );
+
+        String email = sessionUtil.getCurrentUserEmail();
+        if (!existingExpense.getUserEmail().equals(email)) {
+            throw ExceptionUtil.throwAccessDenied("You are not authorized to update this expense");
+        }
+
+        // Update only allowed fields
+        existingExpense.setTitle(expenseRequestDto.getTitle());
+        existingExpense.setAmount(expenseRequestDto.getAmount());
+        //existingExpense.setCategory(expenseRequestDto.getCategory());
+        existingExpense.setDescription(expenseRequestDto.getDescription());
+
+        Expense updated = expenseRepository.save(existingExpense);
+        return ExpenseMapper.mapToExpenseResponseDto(updated);
+
+    }
+
+    @Override
+    public long deleteExpense(long id) {
+        Expense expense =  expenseRepository.findById(id).orElseThrow(
+                () -> ExceptionUtil.throwResourceNotFound("Expenses",String.valueOf(id))
+        );
+        String email =sessionUtil.getCurrentUserEmail();
+        if (!expense.getUserEmail().equals(email)) {
+            throw ExceptionUtil.throwAccessDenied("You are not authorized to delete this expense");
+        }
+
+        expenseRepository.deleteById(id);
+        return id;
+    }
+
+
+    @Override
+    public List<ExpenseResponseDto> getAllExpenses(int pageNum, int size, String sortField, String sortDir) {
+        String userEmail = sessionUtil.getCurrentUserEmail();
+
+      PageRequest pageRequest =  PageRequest.of(pageNum , size,
+                sortDir.equals("asc") ? Sort.by(sortField).ascending()
+                        : Sort.by(sortField).descending());
+
+        Page<Expense> expenses = expenseRepository.findByUserEmail(userEmail, pageRequest);
+
+       return expenses.stream()
+               .map(ExpenseMapper::mapToExpenseResponseDto)
+                .toList();
+
+       // return List.of();
+    }
+
+    @Override
+    public Double getTotalExpenseForUser(String userEmail) {
+        String currentUserEmail = sessionUtil.getCurrentUserEmail();
+
+        if (!currentUserEmail.equals(userEmail)) {
+            throw ExceptionUtil.throwAccessDenied("You are not authorized to view this expense");
+        }
+        return expenseRepository.getTotalExpenseByUser(userEmail);
+
+    }
+
+    @Override
+    public Double getTotalExpenseForAllUsers() {
+
+        return expenseRepository.getTotalExpenseByAllUser();
+    }
+
+    @Override
+    public List<ExpenseResponseDto> getTopThreeExpense(String email) {
+        String currentUserEmail = sessionUtil.getCurrentUserEmail();
+
+        if (!currentUserEmail.equals(email)) {
+            throw ExceptionUtil.throwAccessDenied("You are not authorized to view this expense");
+        }
+
+       return expenseRepository.findTop3ByUserEmailOrderByAmountDesc(email)
+               .stream()
+               .map( ExpenseMapper:: mapToExpenseResponseDto )
+               .collect(Collectors.toList());
+    }
+
+    public void sendNotification() {
+        String currentUserEmail = sessionUtil.getCurrentUserEmail();
+        NotificationRequestDto event = new NotificationRequestDto(
+                currentUserEmail, "Your expense was added", "EMAIL"
+        );
+        kafkaTemplate.send("notifications", event);
+    }
+
+
+}
